@@ -129,3 +129,10 @@ def test_value_ranges(sample_data):
         results.append(result)
         is_successful = all(result.success for result in results)
     assert is_successful, "データの値範囲が期待通りではありません"
+
+
+### added tests
+def test_no_duplicate_rows(sample_data):
+    """データに重複行が含まれていないか"""
+    num_duplicates = sample_data.duplicated().sum()
+    assert num_duplicates == 0, f"{num_duplicates} 行が重複しています"
