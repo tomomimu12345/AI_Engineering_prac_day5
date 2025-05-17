@@ -108,7 +108,7 @@ python pipeline.py
 cd 演習2
 
 python main.py
-pytest main.py
+python -m pytest main.py
 
 black main.py
 ```
