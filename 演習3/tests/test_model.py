@@ -15,6 +15,7 @@ from sklearn.pipeline import Pipeline
 # テスト用データとモデルパスを定義
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/Titanic.csv")
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "../models")
+BASE_MODEL_PATH = os.path.join(MODEL_DIR, "baseline.pkl")
 MODEL_PATH = os.path.join(MODEL_DIR, "titanic_model.pkl")
 
 
@@ -171,3 +172,33 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+# added tests
+def test_model_accuracy_from_baseline(train_model):
+    """モデルの精度を検証"""
+    model, X_test, y_test = train_model
+
+    # 予測と精度計算
+    y_pred = model.predict(X_test)
+    new_acc = accuracy_score(y_test, y_pred)
+
+    if not os.path.exists(BASE_MODEL_PATH):
+        pytest.skip("ベースラインモデルが存在しません")
+
+    with open(BASE_MODEL_PATH, "rb") as f:
+        baseline_model = pickle.load(f)
+
+    base_preds = baseline_model.predict(X_test)
+    base_acc = accuracy_score(y_test, base_preds)
+
+    assert new_acc >= base_acc, f"精度が劣化しています: {new_acc:.3f} < {base_acc:.3f}"
+
+
+def test_model_pickle_consistency(train_model):
+    """保存->読込で予測結果が変わらないことを確認"""
+    model, X_test, _ = train_model
+    with open(MODEL_PATH, "rb") as f:
+        loaded_model = pickle.load(f)
+    preds1 = model.predict(X_test)
+    preds2 = loaded_model.predict(X_test)
+    assert np.array_equal(preds1, preds2), "保存前後で予測結果が一致しません"
